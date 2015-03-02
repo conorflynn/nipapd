@@ -30,10 +30,17 @@ Below are the current used variables and their defaults:
 +-------------+------------------------+
 | PGPASS      | nipap                  |
 +-------------+------------------------+
+| NIPAP_USER  | N/A                    |
++-------------+------------------------+
+| NIPAP_PASS  | N/A                    |
++-------------+------------------------+
 | WELCOME_MSG | NIPAP Docker Container |
 +-------------+------------------------+
 
 ``/etc/nipap/nipap.conf`` is generated from the variables above.
+
+The ``NIPAP_USER`` and ``NIPAP_PASS`` variables determine what credentials to
+be created at startup. If they are not provided, not will be created.
 
 The preferred way to reach postgres from the container is via a
 linked-container to nipap-psql, but of course as long as you supply the correct
@@ -46,7 +53,9 @@ more than one nipap user this probably won't do.
 
 Luckily setting up host bound container volumes is an easy way to circumvent 
 that and allow easy config adjustments without needing to customize the image
-to care about additional environment variables.
+to care about additional environment variables. It will also allow your
+nipap-www container to share the same database as nipapd like they would being
+on the same machine.
 
 On your docker host simply create a directory that you want to resemble
 ``/etc/nipap``, create a container volume and mount to your nipapd instance.
@@ -69,8 +78,10 @@ The below is a working full example::
     docker run --name nipapd -td \
                --volumes-from nipap-conf \
                --link postgres:postgres \
+               -e NIPAP_USER=coxley \
+               -e NIPAP_PASS=something_strong \
                coxley/nipapd
 
 Feel free to create the container volume with nothing in it. This image will
-still auto-generate the config and copy base sqlite database in if none are in
-there. If the files do exist, though, it will skip that part.
+still auto-generate the config and copy the base schema sqlite database in if 
+none are in there. If the files do exist, though, it will skip that part.

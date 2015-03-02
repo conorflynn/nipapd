@@ -72,6 +72,8 @@ welcome_message = {WELCOME_MSG}
 
 
 def write_config(config, path):
+    '''Write config to /etc/nipap/nipap.conf if not existent already'''
+
     if not os.path.exists(path):
         os.makedirs(path)
     file_path = os.path.join(path, 'nipap.conf')
@@ -81,6 +83,7 @@ def write_config(config, path):
 
 
 def setup_environment():
+    '''Setup the local environment'''
 
     # Set default values if no environment variables found
     default_environment = {
@@ -89,6 +92,8 @@ def setup_environment():
         'PGDATABASE': 'nipap',
         'PGUSER': 'nipap',
         'PGPASS': 'nipap',
+        'NIPAP_USER': '',
+        'NIPAP_PASS': '',
         'WELCOME_MSG': 'NIPAP Docker Container',
         }
 
@@ -98,7 +103,8 @@ def setup_environment():
         try:
             environment.update({var: os.environ[var]})
         except KeyError:
-            environment.update({var: default})
+            if default:
+                environment.update({var: default})
 
     # Set it all back into the environment
     for key, val in environment.iteritems():
@@ -108,12 +114,15 @@ def setup_environment():
 
 
 def format_config(environment):
+    '''Format the configuration according to provided/default variables'''
 
     global config_template
     return config_template.format(**environment)
 
 
 def create_pgpass(environment):
+    '''Create .pgpass for psql commands'''
+
     file_name = os.path.expanduser('~/.pgpass')
     os.environ['PGPASSFILE'] = file_name
     contents = '{PGHOST}:{PGPORT}:{PGDATABASE}:{PGUSER}:{PGPASS}'
@@ -124,12 +133,26 @@ def create_pgpass(environment):
 
 
 def init_db(environment):
+    '''Run upstream-provided sql commands to ensure correct db schema'''
 
     db = environment['PGDATABASE']
     user = environment['PGUSER']
     os.system('psql -d {0} -U {1} -f /sql/ip_net.plsql'.format(db, user))
     os.system('psql -d {0} -U {1} -f /sql/functions.plsql'.format(db, user))
     os.system('psql -d {0} -U {1} -f /sql/triggers.plsql'.format(db, user))
+
+
+def create_credentials(environment):
+    '''Create credentials if environment variables were given for them'''
+
+    try:
+        user = environment['NIPAP_USER']
+        passwd = environment['NIPAP_PASS']
+    except KeyError:
+        return
+    cmd = 'nipap-passwd -a {0} -p {1} -n "init user"'.format(user, passwd)
+    os.system(cmd)
+
 
 
 def main():
@@ -139,9 +162,9 @@ def main():
     config = format_config(environment)
     write_config(config, '/etc/nipap')
 
-    # Set up files for psql
     create_pgpass(environment)
     init_db(environment)
+    create_credentials(environment)
 
 if __name__ == '__main__':
     main()
