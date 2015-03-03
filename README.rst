@@ -70,7 +70,7 @@ The below is a working full example::
     # Just provides volume sharing
     NIPAP_CONF=/opt/docker/volumes/nipap/conf
     mkdir -p $NIPAP_CONF
-    docker create --name nipap-conf -v $NIPAP_CONF ubuntu:14.04
+    docker create --name nipap-conf -v $NIPAP_CONF:/etc/nipap ubuntu:14.04
 
     # Start up nipapd container, link volume, and link to postgres
     docker run --name nipapd -td \
