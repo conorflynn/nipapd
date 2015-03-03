@@ -60,14 +60,6 @@ db_path = /etc/nipap/local_auth.db
 #
 #basedn = dc=test,dc=com                ; base DN
 #uri = ldaps://ldap.test.com            ; LDAP server URI
-
-[www]
-xmlrpc_uri = http://@:@127.0.0.1:1337
-#connection uri to the backend
-#example using local authentication with username 'user' and password 'pass'
-#xmlrpc_uri = http://user@local:pass@127.0.0.1:1337
-
-welcome_message = {WELCOME_MSG}
 '''
 
 
@@ -94,7 +86,6 @@ def setup_environment():
         'PGPASS': 'nipap',
         'NIPAP_USER': '',
         'NIPAP_PASS': '',
-        'WELCOME_MSG': 'NIPAP Docker Container',
         }
 
     environment = {}

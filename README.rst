@@ -34,8 +34,6 @@ Below are the current used variables and their defaults:
 +-------------+------------------------+
 | NIPAP_PASS  | N/A                    |
 +-------------+------------------------+
-| WELCOME_MSG | NIPAP Docker Container |
-+-------------+------------------------+
 
 ``/etc/nipap/nipap.conf`` is generated from the variables above.
 
@@ -82,6 +80,24 @@ The below is a working full example::
                -e NIPAP_PASS=something_strong \
                coxley/nipapd
 
+    # Now start up the container for the web interface
+    docker run --name nipap-www -td \
+               --volumes-from nipap-conf \
+               --link nipapd:nipapd \
+               -p 5000:5000 \
+               -e NIPAPD_USER=coxley \
+               -e NIPAPD_PASS=something_strong \
+               -e DEBUG=false \
+               -e WELCOME_MSG="New Docker Container!" \
+               coxley/nipap-www
+
+
 Feel free to create the container volume with nothing in it. This image will
 still auto-generate the config and copy the base schema sqlite database in if 
 none are in there. If the files do exist, though, it will skip that part.
+
+If you want data persistence for the database (I imagine you do), you will need
+to create a volume on the postgres container for /opt/postgresql/data. For
+example, adding the argument 
+``-v /opt/docker/volumes/nipap/db:/opt/postgresql/data`` or wherever you wish
+to store the data on the host.
