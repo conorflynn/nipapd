@@ -97,7 +97,7 @@ still auto-generate the config and copy the base schema sqlite database in if
 none are in there. If the files do exist, though, it will skip that part.
 
 If you want data persistence for the database (I imagine you do), you will need
-to create a volume on the postgres container for /opt/postgresql/data. For
+to create a volume on the postgres container for /var/lib/postgresql. For
 example, adding the argument 
-``-v /opt/docker/volumes/nipap/db:/opt/postgresql/data`` or wherever you wish
+``-v /opt/docker/volumes/nipap/db:/var/lib/postgresql`` or wherever you wish
 to store the data on the host.
