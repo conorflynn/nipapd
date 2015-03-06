@@ -60,32 +60,38 @@ On your docker host simply create a directory that you want to resemble
 
 The below is a working full example::
 
+    # Create volume containers
+    docker create --create nipap_data \
+                  -v /opt/docker/volumes/nipap_data:/etc/nipap \
+                  coxley/nipapd \
+                  /bin/echo "data-only container for nipap"
+
+    docker create --create postgres_data \
+                  -v /opt/docker/volumes/postgres_data:/var/lib/postgresql \
+                  coxley/nipap-psql \
+                  /bin/echo "data-only container for psql"
+
     # Launch psql container
-    docker run --name postgres -td \
+    docker run --name postgres -d \
                -e POSTGRES_PASSWORD=nipap \
                -e POSTGRES_USER=nipap \
+               --volumes-from postgres_data \
                coxley/nipap-psql
 
-    # Create container volume. Doesn't actually start a new container.
-    # Just provides volume sharing
-    NIPAP_CONF=/opt/docker/volumes/nipap/conf
-    mkdir -p $NIPAP_CONF
-    docker create --name nipap-conf -v $NIPAP_CONF:/etc/nipap ubuntu:14.04
-
     # Start up nipapd container, link volume, and link to postgres
-    docker run --name nipapd -td \
-               --volumes-from nipap-conf \
+    docker run --name nipapd -d \
+               --volumes-from nipap_data \
                --link postgres:postgres \
-               -e NIPAP_USER=coxley \
+               -e NIPAP_USER=nipap \
                -e NIPAP_PASS=something_strong \
                coxley/nipapd
 
     # Now start up the container for the web interface
-    docker run --name nipap-www -td \
-               --volumes-from nipap-conf \
+    docker run --name nipap-www -d \
+               --volumes-from nipap_data \
                --link nipapd:nipapd \
                -p 5000:5000 \
-               -e NIPAPD_USER=coxley \
+               -e NIPAPD_USER=nipap \
                -e NIPAPD_PASS=something_strong \
                -e DEBUG=false \
                -e WELCOME_MSG="New Docker Container!" \
@@ -96,8 +102,5 @@ Feel free to create the container volume with nothing in it. This image will
 still auto-generate the config and copy the base schema sqlite database in if 
 none are in there. If the files do exist, though, it will skip that part.
 
-If you want data persistence for the database (I imagine you do), you will need
-to create a volume on the postgres container for /var/lib/postgresql. For
-example, adding the argument 
-``-v /opt/docker/volumes/nipap/db:/var/lib/postgresql`` or wherever you wish
-to store the data on the host.
+If you want to make it a bit simpler, you can put all of the environment
+variables in a separate file and add the argument ``--env-file <file>``.
